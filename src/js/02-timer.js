@@ -1,24 +1,30 @@
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
+const button = document.querySelector('button[data-start]');
+const daysValue = document.querySelector('span[data-days]');
+const hoursValue = document.querySelector('span[data-hours]');
+const minutesValue = document.querySelector('span[data-minutes]');
+const secondsValue = document.querySelector('span[data-seconds]');
+const timeContainer = document.querySelector('.timer');
+const inputEl = document.querySelector('#datetime-picker');
+
+let intervalId = null;
+const currentTime = new Date();
 const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    console.log(selectedDates[0] - new Date());
+    if (selectedDates[0] <= currentTime) {
+      alert('Please choose a date in the future');
+      button.disabled = true;
+      return;
+    } else button.disabled = false;
   },
 };
-
-flatpickr('input[type=text]', options);
-
-const button = document.querySelector('button[data-start]');
-// const inputEl = document.querySelector('#datetime-picker');
-const daysValue = document.querySelector('span[data-days]');
-const hoursValue = document.querySelector('span[data-hours]');
-const minutesValue = document.querySelector('span[data-minutes]');
-const secondsValue = document.querySelector('span[data-seconds]');
+const fp = flatpickr('input[type=text]', options);
 
 button.addEventListener('click', () => {
   timer.start();
@@ -29,15 +35,16 @@ class Timer {
     this.onTick = onTick;
   }
   start() {
-    if (button.disabled) {
-      return;
-    }
     button.disabled = true;
-    const startTime = Date.now();
-    setInterval(() => {
+    intervalId = setInterval(() => {
+      const startTime = fp.selectedDates[0];
       const currentTime = Date.now();
-      const deltaTime = currentTime - startTime;
-
+      const deltaTime = startTime - currentTime;
+      if (deltaTime <= 0) {
+        clearInterval(intervalId);
+        button.disabled = false;
+        return;
+      }
       const time = convertMs(deltaTime);
       this.onTick(time);
     }, 1000);
@@ -67,8 +74,15 @@ function convertMs(ms) {
 }
 
 function updateClockfacew({ days, hours, minutes, seconds }) {
-  daysValue.textContent = `${days}`;
-  hoursValue.textContent = `${hours}`;
-  minutesValue.textContent = `${minutes}`;
-  secondsValue.textContent = `${seconds}`;
+  daysValue.textContent = days;
+  hoursValue.textContent = hours;
+  minutesValue.textContent = minutes;
+  secondsValue.textContent = seconds;
 }
+
+inputEl.style.height = '30px';
+timeContainer.style.display = 'flex';
+timeContainer.style.gap = '20px';
+timeContainer.style.fontSize = '32px';
+button.style.width = '100px';
+button.style.height = '30px';
