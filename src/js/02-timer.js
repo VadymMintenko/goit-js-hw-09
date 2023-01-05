@@ -1,21 +1,33 @@
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
-const button = document.querySelector('button[data-start]');
-const inputEl = document.querySelector('#datetime-picker');
+const options = {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
+  onClose(selectedDates) {
+    console.log(selectedDates[0] - new Date());
+  },
+};
 
+flatpickr('input[type=text]', options);
+
+const button = document.querySelector('button[data-start]');
+// const inputEl = document.querySelector('#datetime-picker');
 const daysValue = document.querySelector('span[data-days]');
 const hoursValue = document.querySelector('span[data-hours]');
 const minutesValue = document.querySelector('span[data-minutes]');
 const secondsValue = document.querySelector('span[data-seconds]');
 
-button.disabled = false;
-
 button.addEventListener('click', () => {
   timer.start();
 });
 
-const timer = {
+class Timer {
+  constructor({ onTick }) {
+    this.onTick = onTick;
+  }
   start() {
     if (button.disabled) {
       return;
@@ -24,12 +36,17 @@ const timer = {
     const startTime = Date.now();
     setInterval(() => {
       const currentTime = Date.now();
+      const deltaTime = currentTime - startTime;
 
-      const time = convertMs(currentTime - startTime);
-      updateClockfacew(time);
+      const time = convertMs(deltaTime);
+      this.onTick(time);
     }, 1000);
-  },
-};
+  }
+}
+
+const timer = new Timer({
+  onTick: updateClockfacew,
+});
 
 function pad(value) {
   return String(value).padStart(2, '0');
